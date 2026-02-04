@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Wh- Questions Underwater World</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+<style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        width: 100%;
+        height: 100%;
+        font-family: 'Roboto Condensed', sans-serif;
+    }
+    body {
+        /* Новый подводный фон */
+        background-image: url('https://i.postimg.cc/638bg83p/clean_image_(1).png');
+        background-size: cover;
+        background-position: center;
+        user-select: none;
+    }
+
+    /* Стиль для медуз */
+    .jellyfish {
+        width: 300px; /* Размер 300px сохранен */
+        height: 300px; /* Размер 300px сохранен */
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        position: absolute;
+        cursor: pointer;
+        z-index: 50;
+        transition: left 0.1s linear, top 0.1s linear; /* Плавное перемещение */
+        /* Анимация пульсации медузы */
+        animation: pulseJelly 4s infinite ease-in-out;
+    }
+
+    @keyframes pulseJelly {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.85); } /* Сжимается сильнее */
+        100% { transform: scale(1); }
+    }
+
+    /* Единый стиль кнопок (Старт, Рестарт, Ответы) */
+    .game-btn {
+        background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
+        border: 3px solid #fff;
+        border-radius: 25px;
+        color: #004d40;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 6px 0 #006064, 0 10px 10px rgba(0,0,0,0.3);
+        transition: transform 0.1s, box-shadow 0.1s;
+        text-transform: uppercase;
+        text-align: center;
+    }
+    .game-btn:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #006064, 0 4px 4px rgba(0,0,0,0.3);
+    }
+
+    /* Стартовая кнопка */
+    #startBtn {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 28px;
+        padding: 20px 50px;
+        z-index: 200;
+        min-width: 300px;
+    }
+    #startBtn span {
+        display: block;
+        font-size: 18px;
+        margin-top: 5px;
+        color: #004d40;
+        opacity: 0.8;
+    }
+
+    /* Счетчик очков */
+    #scoreBoard {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        font-size: 32px;
+        color: white;
+        text-shadow: 2px 2px 4px #000;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.4);
+        padding: 10px 20px;
+        border-radius: 15px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* Модальное окно вопроса (стилизация под Риф) */
+    #questionModal {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 80%;
+        max-width: 600px;
+        background: radial-gradient(circle at center, #006994 0%, #00334e 100%);
+        padding: 40px;
+        /* Обрамление в виде "рифов" или камней через border и shadow */
+        border: 8px solid #ff7f50; /* Коралловый цвет */
+        border-radius: 30px;
+        box-shadow: 
+            0 0 0 6px #2e8b57, /* Морская зелень */
+            0 0 20px rgba(0,0,0,0.8),
+            inset 0 0 50px rgba(0,0,0,0.5);
+        display: none;
+        z-index: 400;
+        text-align: center;
+        color: white;
+    }
+
+    /* Заголовок вопроса с пропуском */
+    #questionText {
+        font-size: 36px;
+        margin-bottom: 40px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        background: rgba(0,0,0,0.3);
+        padding: 20px;
+        border-radius: 15px;
+        border: 2px dashed rgba(255,255,255,0.3);
+    }
+
+    /* Контейнер вариантов ответов */
+    .options-container {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .option-btn {
+        padding: 15px 30px;
+        font-size: 24px;
+        min-width: 120px;
+    }
+    
+    .option-btn:hover {
+        background: linear-gradient(180deg, #84fab0 0%, #8fd3f4 100%);
+    }
+
+    /* Эффект пузырьков при правильном ответе */
+    .bubble {
+        position: absolute;
+        background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4));
+        border-radius: 50%;
+        pointer-events: none;
+        animation: floatUp 1.5s ease-in forwards;
+        z-index: 600;
+    }
+
+    @keyframes floatUp {
+        0% { transform: translateY(0) scale(0.5); opacity: 0; }
+        10% { opacity: 0.8; }
+        100% { transform: translateY(-150px) scale(1.2); opacity: 0; }
+    }
+
+    /* Финальный экран */
+    #finalOverlay {
+        position: absolute;
+        top:0; left:0;
+        width:100%; height:100%;
+        background: rgba(0,20,40,0.85);
+        display: none;
+        z-index: 500;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        color: white;
+    }
+    #finalMessage {
+        font-size: 64px;
+        margin-bottom: 30px;
+        text-shadow: 0 0 10px #4facfe;
+        text-align: center;
+    }
+    #finalScore {
+        font-size: 32px;
+        margin-bottom: 40px;
+        color: #ff7f50;
+    }
+
+</style>
+</head>
+<body>
+
+<!-- Счетчик -->
+<div id="scoreBoard">Score: <span id="scoreVal">0</span></div>
+
+<!-- Кнопка старта -->
+<button class="game-btn" id="startBtn">
+    START GAME
+    <br><span>Instruction: Add question words (what, which, where, when, why, who, whose)</span>
+</button>
+
+<!-- Окно вопроса -->
+<div id="questionModal">
+    <div id="questionText">___ are you?</div>
+    <div class="options-container" id="optionsBox">
+        <!-- Кнопки будут здесь -->
+    </div>
+</div>
+
+<!-- Финальный экран -->
+<div id="finalOverlay">
+    <div id="finalMessage">Excellent!</div>
+    <div id="finalScore">Your Score: 0</div>
+    <!-- Заменили onclick="location.reload()" на id="restartBtn" -->
+    <button class="game-btn" id="restartBtn" style="font-size: 24px; padding: 15px 40px;">Play Again</button>
+</div>
+
+<script>
+    // --- Данные игры (вопросы Wh-) ---
+    // Формат: { q: "Текст с ___", options: ["Правильный", "Неправильный1", "Неправильный2"], answer: "Правильный" }
+    // Порядок опций будет перемешиваться скриптом
+    const rawQuestions = [
+        { q: "___ do you live?", a: "Where", distractors: ["What", "When"] },
+        { q: "___ is your best friend?", a: "Who", distractors: ["Which", "When"] },
+        { q: "___ book do you like more?", a: "Which", distractors: ["Who", "Where"] },
+        { q: "___ is your birthday?", a: "When", distractors: ["Where", "Who"] },
+        { q: "___ bag is this?", a: "Whose", distractors: ["Who", "Where"] },
+        { q: "___ do you eat for breakfast?", a: "What", distractors: ["When", "Why"] },
+        { q: "___ is your favourite singer?", a: "Who", distractors: ["What", "Where"] },
+        { q: "___ do you want for your birthday?", a: "What", distractors: ["When", "Who"] },
+        { q: "___ pencil case is this?", a: "Whose", distractors: ["Who", "Where"] },
+        { q: "___ do you get up?", a: "When", distractors: ["Where", "Who"] },
+        { q: "___ do you like this song?", a: "Why", distractors: ["What", "Which"] },
+        { q: "___ subject do you like more?", a: "Which", distractors: ["Who", "Where"] },
+        { q: "___ are you sad?", a: "Why", distractors: ["What", "Where"] }
+    ];
+
+    const jellyfishImages = [
+        "https://i.postimg.cc/vTHTGwJ5/Gemini-Generated-Image-imcdt0imcdt0imcd.png",
+        "https://i.postimg.cc/hjXZ6XGk/Gemini_Generated_Image_llh0h4llh0h4llh0.png",
+        "https://i.postimg.cc/yNQrLm7Q/Gemini_Generated_Image_4shgny4shgny4shg.png"
+    ];
+
+    let gameQuestions = [];
+    let items = []; 
+    let score = 0;
+    let currentItem = null; // Текущая открытая медуза
+    let activeMovement = false;
+    const JELLY_SIZE = 300; // Размер медузы 300px
+
+    // --- Логика инициализации ---
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+        document.getElementById("startBtn").style.display = "none";
+        startGame();
+    });
+
+    // Обработчик для кнопки перезапуска (без перезагрузки страницы)
+    document.getElementById("restartBtn").addEventListener("click", () => {
+        document.getElementById("finalOverlay").style.display = "none";
+        startGame();
+    });
+
+    function startGame() {
+        score = 0;
+        updateScoreDisplay();
+        items.forEach(i => i.remove());
+        items = [];
+        
+        // Копируем и перемешиваем вопросы заново при каждом старте
+        gameQuestions = [...rawQuestions].sort(() => Math.random() - 0.5);
+        
+        // Создаем столько медуз, сколько вопросов (макс 15)
+        const count = Math.min(gameQuestions.length, 15);
+        for(let i = 0; i < count; i++) {
+            // Выбираем случайное изображение медузы
+            const imgIndex = i % 3; 
+            createJellyfish(imgIndex, i);
+        }
+        activeMovement = true;
+    }
+
+    // --- Создание медузы и движение ---
+
+    function createJellyfish(imgIndex, qIndex) {
+        const item = document.createElement("div");
+        item.className = "jellyfish";
+        item.style.backgroundImage = `url('${jellyfishImages[imgIndex]}')`;
+        
+        // Случайная начальная позиция (вернули простую логику без проверки коллизий)
+        let x = Math.random() * (window.innerWidth - JELLY_SIZE);
+        let y = Math.random() * (window.innerHeight - JELLY_SIZE);
+        
+        // Скорость (dx, dy) - вернули медленную (0.7)
+        let dx = (Math.random() - 0.5) * 0.7; 
+        let dy = (Math.random() - 0.5) * 0.7; 
+
+        item.style.left = x + "px";
+        item.style.top = y + "px";
+        
+        // Привязываем вопрос к медузе
+        item.dataset.qIndex = qIndex;
+
+        // Клик по медузе
+        item.addEventListener("click", (e) => {
+            e.stopPropagation(); // Чтобы не сработало на фоне
+            openQuestion(item, qIndex);
+        });
+
+        document.body.appendChild(item);
+        items.push({ el: item, x, y, dx, dy });
+
+        startAnimationLoop();
+    }
+
+    let animationFrameId;
+
+    function startAnimationLoop() {
+        if (!animationFrameId) {
+            loop();
+        }
+    }
+
+    function loop() {
+        if (!activeMovement) return;
+
+        items.forEach(obj => {
+            // Обновляем координаты
+            obj.x += obj.dx;
+            obj.y += obj.dy;
+
+            // Отталкивание от стен
+            if (obj.x <= 0 || obj.x + JELLY_SIZE >= window.innerWidth) {
+                obj.dx = -obj.dx;
+            }
+            if (obj.y <= 0 || obj.y + JELLY_SIZE >= window.innerHeight) {
+                obj.dy = -obj.dy;
+            }
+
+            // Применяем
+            obj.el.style.left = obj.x + "px";
+            obj.el.style.top = obj.y + "px";
+        });
+
+        // Логика столкновений между медузами удалена, чтобы вернуть прежнее поведение
+
+        animationFrameId = requestAnimationFrame(loop);
+    }
+
+    function stopMovement() {
+        activeMovement = false;
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+
+    function resumeMovement() {
+        activeMovement = true;
+        loop();
+    }
+
+    // --- Логика викторины ---
+
+    function openQuestion(itemElement, index) {
+        if (!activeMovement) return; // Уже открыто окно
+        stopMovement();
+        currentItem = itemElement;
+        
+        const qData = gameQuestions[index];
+        const modal = document.getElementById("questionModal");
+        const qText = document.getElementById("questionText");
+        const optBox = document.getElementById("optionsBox");
+
+        qText.textContent = qData.q;
+        optBox.innerHTML = "";
+
+        // Формируем варианты (правильный + дистракторы)
+        let options = [qData.a, ...qData.distractors];
+        // Перемешиваем варианты
+        options.sort(() => Math.random() - 0.5);
+
+        options.forEach(opt => {
+            const btn = document.createElement("button");
+            btn.className = "game-btn option-btn";
+            btn.textContent = opt;
+            btn.onclick = () => checkAnswer(opt, qData.a);
+            optBox.appendChild(btn);
+        });
+
+        modal.style.display = "block";
+    }
+
+    function checkAnswer(selected, correct) {
+        if (selected === correct) {
+            // Правильно
+            createBubbles();
+            score += 10;
+            updateScoreDisplay();
+            closeModal();
+            
+            // Удаляем медузу
+            const idx = items.findIndex(obj => obj.el === currentItem);
+            if (idx > -1) {
+                items[idx].el.remove();
+                items.splice(idx, 1);
+            }
+
+            // Проверка окончания игры
+            if (items.length === 0) {
+                setTimeout(showFinalScreen, 1000);
+            } else {
+                resumeMovement();
+            }
+
+        } else {
+            // Неправильно - тряска окна
+            const modal = document.getElementById("questionModal");
+            modal.style.transform = "translate(-50%, -50%) rotate(5deg)";
+            setTimeout(() => {
+                modal.style.transform = "translate(-50%, -50%) rotate(-5deg)";
+                setTimeout(() => {
+                    modal.style.transform = "translate(-50%, -50%) rotate(0deg)";
+                }, 100);
+            }, 100);
+        }
+    }
+
+    function closeModal() {
+        document.getElementById("questionModal").style.display = "none";
+    }
+
+    function updateScoreDisplay() {
+        document.getElementById("scoreVal").textContent = score;
+    }
+
+    // --- Эффекты (Пузырьки) ---
+
+    function createBubbles() {
+        for (let i = 0; i < 60; i++) {
+            const b = document.createElement("div");
+            b.className = "bubble";
+            // Случайный размер
+            const size = Math.random() * 30 + 10;
+            b.style.width = size + "px";
+            b.style.height = size + "px";
+            
+            // Позиция по всему экрану
+            b.style.left = Math.random() * window.innerWidth + "px";
+            b.style.top = Math.random() * window.innerHeight + "px";
+            
+            document.body.appendChild(b);
+
+            // Удалить из DOM после анимации
+            setTimeout(() => {
+                b.remove();
+            }, 1500);
+        }
+    }
+
+    // --- Финал ---
+
+    function showFinalScreen() {
+        const overlay = document.getElementById("finalOverlay");
+        document.getElementById("finalScore").textContent = "Your Score: " + score;
+        overlay.style.display = "flex";
+    }
+
+</script>
+</body>
+</html>
